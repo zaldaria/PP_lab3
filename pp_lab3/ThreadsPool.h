@@ -5,7 +5,12 @@
 #include <thread>
 #include <queue>
 #include <functional>
+#if defined (_WIN32) || defined (_WIN64)
 #include <Windows.h>
+#elif defined __linux__
+#include <pthread.h>
+#include <errno.h>
+#endif
 
 using namespace std;
 
@@ -18,8 +23,11 @@ struct task {
 
 class threadsPool {
 private:
-    //vector <thread> threads;
+#if defined (_WIN32) || defined (_WIN64)
     vector<HANDLE> threads;
+#elif defined __linux__
+    vector<pthread_t> threads;
+#endif
 
     uint32_t cntThreads = 0;
     queue <task> q;
@@ -33,8 +41,14 @@ public:
     threadsPool();
     ~threadsPool();
     unsigned int GetCntThreads();
-    //void run();
+
+#if defined (_WIN32) || defined (_WIN64)
     unsigned __stdcall run(void* param);
-    unsigned __stdcall passQ(function<void(double)> f, double p1);
+    void passQ(function<void(double)> f, double p1);
+#elif defined __linux__
+    void* run(void* param);
+    void* passQ(function<void(double)> f, double p1);
+#endif
+   
 
 };
